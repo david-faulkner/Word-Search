@@ -1,5 +1,7 @@
 const asyncHandler = require('express-async-handler')
 
+const wordlist = require('../models/wordlistModel')
+
 /**
  * *Gets all word lists from db
  * *GET /api/words
@@ -7,9 +9,9 @@ const asyncHandler = require('express-async-handler')
  * @param {*} res 
  */
 const getLists = asyncHandler(async (req, res) => {
-    res.status(200).json({
-        'words': ['mary', 'had', 'a', 'little', 'lamb']
-    })
+    const lists = await wordlist.find()
+
+    res.status(200).json(lists)
 })
 
 /**
@@ -19,13 +21,16 @@ const getLists = asyncHandler(async (req, res) => {
  * @param {*} res 
  */
  const insertList = asyncHandler(async (req, res) => {
-    if (!req.body.text) {
+    if (!req.body.words) {
         res.status(400)
-        throw new Error('Please add text')
+        throw new Error('please send a word list')
     }
-    res.status(200).json({
-        'words': ['mary', 'had', 'a', 'little', 'lamb']
+
+    const list = await wordlist.create({
+        words: req.body.words
     })
+
+    res.status(200).json(list)
 })
 
 /**
@@ -35,9 +40,16 @@ const getLists = asyncHandler(async (req, res) => {
  * @param {*} res 
  */
  const updateList = asyncHandler(async (req, res) => {
-    res.status(200).json({
-        'words': `updated: ${req.params.id}`
-    })
+    const list = await wordlist.findById(req.params.id)
+
+    if (!list) {
+        res.status(400)
+        throw new Error('list not found')
+    }
+
+    const updatedList = await wordlist.findByIdAndUpdate(req.params.id, req.body, {new: true})
+
+    res.status(200).json(updatedList)
 })
 
 /**
@@ -47,9 +59,16 @@ const getLists = asyncHandler(async (req, res) => {
  * @param {*} res 
  */
  const deleteList = asyncHandler(async (req, res) => {
-    res.status(200).json({
-        'words': `deleted: ${req.params.id}`
-    })
+    const list = await wordlist.findById(req.params.id)
+
+    if (!list) {
+        res.status(400)
+        throw new Error('list not found')
+    }
+
+    await list.remove()
+
+    res.status(200).json({id: req.params.id})
 })
 
 module.exports = {
