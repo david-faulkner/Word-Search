@@ -13,7 +13,8 @@ app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 
 app.use('/api/words', require('./routes/wordRoutes'))
+app.use('/api/users', require('./routes/userRoutes'))
 
 app.use(errorHandler)
 
-app.listen(port, () => console.log(`server started on port ${port}, ${process.env.PORT}`))
+app.listen(port, () => console.log(`server started on port ${port}`))

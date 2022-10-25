@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler')
 
 const wordlist = require('../models/wordlistModel')
+const User = require('../models/userModel')
 
 /**
  * *Gets all word lists from db
@@ -9,7 +10,7 @@ const wordlist = require('../models/wordlistModel')
  * @param {*} res 
  */
 const getLists = asyncHandler(async (req, res) => {
-    const lists = await wordlist.find()
+    const lists = await wordlist.find({user: req.user.id})
 
     res.status(200).json(lists)
 })
@@ -27,6 +28,7 @@ const getLists = asyncHandler(async (req, res) => {
     }
 
     const list = await wordlist.create({
+        user: req.user.id,
         words: req.body.words
     })
 
@@ -47,6 +49,18 @@ const getLists = asyncHandler(async (req, res) => {
         throw new Error('list not found')
     }
 
+    const user = await User.findById(req.user.id)
+
+    if (!user) {
+        res.status(401)
+        throw new Error('User not found')
+    }
+
+    if (list.user.toString() !== user.id) {
+        res.status(401)
+        throw new Error('User not authorized')
+    }
+
     const updatedList = await wordlist.findByIdAndUpdate(req.params.id, req.body, {new: true})
 
     res.status(200).json(updatedList)
@@ -64,6 +78,18 @@ const getLists = asyncHandler(async (req, res) => {
     if (!list) {
         res.status(400)
         throw new Error('list not found')
+    }
+
+    const user = await User.findById(req.user.id)
+
+    if (!user) {
+        res.status(401)
+        throw new Error('User not found')
+    }
+
+    if (list.user.toString() !== user.id) {
+        res.status(401)
+        throw new Error('User not authorized')
     }
 
     await list.remove()
